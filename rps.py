@@ -43,7 +43,7 @@ async def rps(client: Client, message: Message):
   
     async for i in range(rounds):
         user_choice = await client.message.text.lower()
-        bot_choice = random.choice(["rock", "paper", "scissors"])
+        bot_choice = choice(["rock", "paper", "scissors"])
 
         result = await client.determine_winner(user_choice, bot_choice)
         await client.message.reply_text(f"You chose {user_choice}.\nI chose {bot_choice}.\n{result}")
