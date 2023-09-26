@@ -2,7 +2,6 @@ import asyncio
 from random import choice
 from pyrogram import filters, Client
 from pyrogram.types import Message
-from Romeo import *
 
 win_lst = []
 
@@ -19,7 +18,7 @@ def determine_winner(user_choice, bot_choice):
     else:
         return "computer"
 
-# check who is the winner 
+# Check who is the winner
 def check_winner(win_lst):
     player = win_lst.count("player")
     draw = win_lst.count("draw")
@@ -31,29 +30,37 @@ def check_winner(win_lst):
     else:
         return "draw"
 
-
 @Client.on_message(filters.command(["Rps", "rps"], ["/", "!", "."]))
 async def rps(client: Client, message: Message):
-    await message.reply_text(f"write one of this (rock, paper, scissors)")
-    user = message.from_user.id
-    userr = await client.get_users(message.from_user.id)
-    player = f"[{userr.first_name}](tg://user?id={userr.id})"
-    Romeo = "".join(e.text.split(maxsplit=1)[1:]).split(" ", 2)
-    rounds = int(Romeo[0])
-  
-    async for i in range(rounds):
-        user_choice = await client.message.text.lower()
+    while True:
+        round_input = (await message.reply_text("Enter how many rounds you want to play between 3 and 9:")).text.lower()
+        try:
+            rounds = int(round_input)
+            if rounds % 2 == 1 and 3 <= rounds <= 9:
+                break
+            else:
+                await message.reply_text("Please enter an odd number between 3 and 9.")
+        except ValueError:
+            await message.reply_text("Invalid input. Please enter an odd number between 3 and 9.")
+
+    for _ in range(rounds):
+        user_choice = (await message.reply_text("Enter your choice -\n\nOne of these:\n(rock, paper, scissors)")).text.lower()
         bot_choice = choice(["rock", "paper", "scissors"])
 
-        result = await client.determine_winner(user_choice, bot_choice)
-        await client.message.reply_text(f"You chose {user_choice}.\nI chose {bot_choice}.\n{result}")
+        result = determine_winner(user_choice, bot_choice)
+        await message.reply_text(f"You chose **{user_choice}**.\nComputer chose **{bot_choice}**.\n\n**{result}** wins this round")
         win_lst.append(result)
- 
-    final_result = await client.check_winner()
-    await message.reply_text(f"{final_result} win the game ")
-          
 
-
+    final_result = check_winner(win_lst)
+    if final_result == "player":
+        user_id = message.from_user.id
+        userr = await client.get_users(user_id)
+        mention = f"[{userr.first_name}](tg://user?id={user_id})"
+        await message.reply_text(f"{mention} wins the game")
+    elif final_result == "computer":
+        await message.reply_text("**Computer** wins the game")
+    else:
+        await message.reply_text("It's a draw!")
                  
 
 
